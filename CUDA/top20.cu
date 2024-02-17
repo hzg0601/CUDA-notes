@@ -8,11 +8,13 @@
 #define GRID_SIZE  ((N + BLOCK_SIZE - 1) / BLOCK_SIZE) 
 #define topk 20
 
-
+// 定义统一内存变量
 __managed__ int source_array[N];
 __managed__ int _1pass_results[topk * GRID_SIZE];
 __managed__ int final_results[topk];
-
+// 数组中有任意值与给定数字相等，或者最后一位大于给定数字，则直接返回；
+// 否则，从最后一个位置开始循环，只要给定数字小于其前一个位置，则将数字插入该位置
+// 故而函数的目标是按降序插入数字？
 __device__ __host__ void insert_value(int* array, int k, int data)
 {
     for (int i = 0; i < k; i++)
@@ -69,6 +71,7 @@ __global__ void top_k(int* input, int length, int* output)
         temp_per_block[threadIdx.x *topk+i ] = t[i];
         //printf("%d\n",t[i]);
     }
+    // 调用共享内存变量一定要调用__syncthreads命令
     __syncthreads();
     //printf("!!");
 
