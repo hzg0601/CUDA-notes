@@ -3,11 +3,11 @@
 
 
 __global__ void print_id() {
-    printf("in kernel currently\n");
+    // printf("in kernel currently\n");
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
     const int gid = tid + bid * blockDim.x;
-    printf("The global id, thread id, block id is: %d,%d,%d, respectively\n", gid,tid,bid );
+    // printf("The global id, thread id, block id is: %d,%d,%d, respectively\n", gid,tid,bid );
 }
 
 __global__ void add_from_gpu(float *A, float *B, float *C, const int N){
