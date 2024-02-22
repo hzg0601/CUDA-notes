@@ -80,10 +80,19 @@ __global__ void top_k(int* input, int length, int* output)
         if( threadIdx.x < i )
         {
             //a 是第二个线程所存数据的开头 
+            // threadIdx.x < i -> threadIdx.x +i < 2i <
+            //首次时，对线程id为0的线程，a=BLOCK_SIZE*topk/2，线程id为BLOCK_SIZE / 2-1的线程，a=(BLOCK_SIZE-1)*topk
+            //末次时，只处理id为0的线程，a=topk
             int a = (threadIdx.x+i)*topk;
             // 循环n次，将a开始的n个数字都和b所在的数字进行大小对比
             for(int j = 0;  j < topk ; j ++){
                 //如果 a 位置数字更大 进行替换
+                //首次时，对于线程id为0的线程，a+j \in [BLOCK_SIZE*topk/2, BLOCK_SIZE*topk/2+topk)
+                //对于id为BLOCK_SIZE / 2-1的线程，a+j \in [（BLOCK_SIZE-1）*topk, BLOCK_SIZE*topk)
+                //末次时，对应id为0的线程，a+j \in [topk, topk*2)
+               //每个线程独有的t,根据id的排序，与temp_per_block一致
+               //因此只需进行折半比较，即用temp_per_block的后半段与block内的前半部分线程比较，即完成了一轮比较
+               //而由于t是已排序好的，因此只需要比较temp_per_block的顺序和对应t的最后一个即可，比较后重排t即完成插入
                 if(temp_per_block[ a + j  ] > t[ topk - 1]){
                     //执行替换，替换完成后循环n次插入对应位置
                     t[topk-1] = temp_per_block[ a + j  ];
@@ -107,7 +116,8 @@ __global__ void top_k(int* input, int length, int* output)
             }
         }
         __syncthreads();
-    }  
+    }
+
     __syncthreads();
     if( threadIdx.x==0&&blockDim.x * blockIdx.x < length)
     {

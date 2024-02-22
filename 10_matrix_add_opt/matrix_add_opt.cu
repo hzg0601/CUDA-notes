@@ -3,7 +3,7 @@
 #include <stdlib.h> //for srand, rand
 #include <time.h>
 #include <sys/time.h> // for gettimeofday
-
+// 每次调用kernel函数后使用cudaGetLastError，调用其他设备函数直接包裹
 #define ERROR_CHECK(r) \
 {\
     cudaError_t rr = r; \
@@ -79,8 +79,7 @@ void init_data(int * ptr, const int n){
 double get_time(){
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    return ((double)tv.tv_usec * 0.000001+tv.tv_sec);
-    
+    return ((double)tv.tv_usec * 0.000001+tv.tv_sec); 
 }
 
 int main(int argc, char *argv[]){
@@ -111,6 +110,7 @@ int main(int argc, char *argv[]){
     double gpu_start_time = get_time();
     _sum_gpu<<<NUM_BLOCKS,BLOCK_SIZE>>>(device_array,N, device_result);
     //同步设备；
+    // ERROR_CHECK(cudaGetLastError());
     cudaDeviceSynchronize();
 
     //设备数据转移至host;
