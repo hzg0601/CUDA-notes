@@ -25,16 +25,26 @@ __managed__ int cpu_shark_T[M][M];//CPU result
 
 __global__ void _ZHI_transpose(int A[M][M], int B[M][M])
 {
-    __shared__ int rafa[TILE_SIZE][TILE_SIZE + 1]; //tell me why?
-	
-    int col = threadIdx.x + blockDim.x * blockIdx.x;
-    int row = threadIdx.y + blockDim.y * blockIdx.y;
-    if (col < M && row < M)
-    {
-	    rafa[threadIdx.y][threadIdx.x] = A[row][col];
+    __shared__ int rafa[TILE_SIZE][TILE_SIZE +1]; //tell me why?
+    //第二维的大小为 TILE_SIZE + 1 可能是为了在共享内存中留出一个额外的元素，
+    //例如用于存储辅助计算数据或者提高内存访问的效率。
+	//共享内存在block内共享，
+    //每个block至多1024个线程，使用64K寄存器，每个线程至多使用255个寄存器
+    // A, B存放于寄存器和本地内存，一个线程对它的修改对于另一个线程是不可见的
+    //threadIdx.x + blockDim.x * blockIdx.x代表目标线程在展开方阵中的当前行的位置
+    //threadIdx.y + blockDim.y * blockIdx.y代表目标线程在展开方阵中所在行前面有多个整体行
+    
+    int ix = threadIdx.x + blockDim.x * blockIdx.x;
+    int iy = threadIdx.y + blockDim.y * blockIdx.y;
+    if (ix < M && iy < M)
+    {//向
+	    rafa[threadIdx.y][threadIdx.x] = A[iy][ix];
     }
     __syncthreads();
-	
+    // B[threadIdx.y + blockDim.x * blockIdx.x][threadIdx.x + blockDim.y * blockIdx.y]
+    // rafa[threadIdx.x][threadIdx.y]
+    // blockDim.x * blockIdx.x, blockDim.y * blockIdx.y代表线程的全局id
+    // 由于使用共享内存因此只能对单个block转置，而每个block写入的顺序不能改变
     int y2 = threadIdx.y + blockDim.x * blockIdx.x;
     int x2 = threadIdx.x + blockDim.y * blockIdx.y;
     if (x2 < M && y2 < M)
