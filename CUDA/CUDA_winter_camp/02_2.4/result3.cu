@@ -23,7 +23,7 @@ __global__ void gpu_matrix_mult_shared(int *d_a, int *d_b, int *d_result, int n)
 {
     __shared__ int tile_a[BLOCK_SIZE][BLOCK_SIZE];
     __shared__ int tile_b[BLOCK_SIZE][BLOCK_SIZE];
-
+    //每次只考虑BLOCK_SIZE * BLOCK_SIZE大小的数据，把这部分数据存入共享内存中
     int row = blockIdx.y * BLOCK_SIZE + threadIdx.y;
     int col = blockIdx.x * BLOCK_SIZE + threadIdx.x;
     int tmp = 0;
@@ -31,6 +31,7 @@ __global__ void gpu_matrix_mult_shared(int *d_a, int *d_b, int *d_result, int n)
 
     for (int sub = 0; sub < gridDim.x; ++sub) 
     {
+        //idx = 
         idx = row * n + sub * BLOCK_SIZE + threadIdx.x;
         tile_a[threadIdx.y][threadIdx.x] = row<n && (sub * BLOCK_SIZE + threadIdx.x)<n? d_a[idx]:0;
         idx = (sub * BLOCK_SIZE + threadIdx.y) * n + col;
