@@ -12,19 +12,31 @@
         exit(-1);\
     }\
 }
+// 代码不够稳健，对较小的数组会失败；
+// 在非集成显卡上使用统一内存操作，不会省去内存拷贝操作
+// 在统一内存上执行uncoalesced memory access,会导致性能下降,一维数组在内存中是连续存储的，可以更好地利用GPU的内存预取和缓存机制。
+// 若使用统一内存，实测在二维数组上，global操作时间为155us,在一维数组上global操作时间为48us
+// 但如果使用共享内存，则一维或二维数组的性能差异不大，均为3.87us
+// 若不使用统一内存，都使用一维数组，则global操作和shared操作时间差异在可接受范围内，global操作时间为4.48us,shared操作时间为3.87us.
 
 #define M 40
 #define N 50
 #define K 60
 #define BLOCK_SIZE 32
 
-__managed__ int A[40][50] = {1};
-__managed__ int B[50][60] = {2};
-__managed__ int C_g[40][60] = {0};
-__managed__ int C_s[40][60] = {0};
-__managed__ int C_c[40][60] = {0};
+__managed__ int A[M][N] = {1};
+__managed__ int B[N][K] = {2};
+__managed__ int C_g[M][K] = {0};
+__managed__ int C_s[M][K] = {0};
+__managed__ int C_c[M][K] = {0};
 
+    // 在性能方面，由于一维数组的元素在内存中是连续存储的，因此访问一维数组的元素通常比访问二维数组的元素更高效。
+    // 而对于二维数组，由于行与行之间的元素存储不是连续的，可能会引入额外的缓存行失效等开销，导致性能略低于一维数组。
+    // 使用一维数组可以更好地适应GPU的内存访问模式。一维数组在内存中是连续存储的，可以更好地利用GPU的内存预取和缓存机制。
+    // 在并行计算中，GPU线程可以更有效地访问一维数组的连续内存块，减少内存访问延迟，提高内存带宽利用率。
+    // 一维数组的内存访问模式更适合GPU的并行计算模式，可以更好地发挥GPU的计算能力。
 __global__ void gpu_matrix_mul_global(int A[M][N],int B[N][K],int C[M][K]){
+
     int ix = threadIdx.x + blockDim.x * blockIdx.x;
     int iy = threadIdx.y + blockDim.y * blockIdx.y;
     if(iy < M && ix < K){

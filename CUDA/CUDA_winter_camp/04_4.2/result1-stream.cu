@@ -19,6 +19,7 @@ __global__ void kernel( int *a, int *b, int *c ) {
 
 
 int main( void ) {
+    //通过cudaGetDeviceProperties获取设备属性,判断设备是否支持流
     cudaDeviceProp  prop;
     int whichDevice;
     CHECK( cudaGetDevice( &whichDevice ) );
@@ -27,10 +28,10 @@ int main( void ) {
         printf( "Device will not handle overlaps, so no speed up from streams\n" );
         return 0;
     }
-
+    // 通过cudaEvent_t来计时
     cudaEvent_t     start, stop;
     float           elapsedTime;
-
+    // 通过cudaStream_t来声明流
     cudaStream_t    stream0, stream1;
     int *host_a, *host_b, *host_c;
     int *dev_a0, *dev_b0, *dev_c0;
@@ -41,6 +42,7 @@ int main( void ) {
     CHECK( cudaEventCreate( &stop ) );
 
     // initialize the streams
+    // 通过cudaStreamCreate来创建流
     CHECK( cudaStreamCreate( &stream0 ) );
     CHECK( cudaStreamCreate( &stream1 ) );
 
@@ -64,6 +66,7 @@ int main( void ) {
 
     CHECK( cudaEventRecord( start, 0 ) );
     // now loop over full data, in bite-sized chunks
+    // 运行10次kernel,stream0和stream1交替执行,host_a占据前半部分,host_b占据后半部分，长度均为N
     for (int i=0; i<FULL_DATA_SIZE; i+= N*2) {
         // enqueue copies of a in stream0 and stream1
         CHECK( cudaMemcpyAsync( dev_a0, host_a+i, N * sizeof(int), cudaMemcpyHostToDevice, stream0 ) );
