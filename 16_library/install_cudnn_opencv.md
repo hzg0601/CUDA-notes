@@ -66,3 +66,5 @@ sudo apt install cmake-qt-gui
 如果pkgconfig下没有opencv.pc，则需要手动新建
 
 https://blog.csdn.net/PecoHe/article/details/97476135
+
+**使用Makefile命令编译，其余均失败**

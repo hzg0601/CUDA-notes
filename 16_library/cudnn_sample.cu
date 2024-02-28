@@ -2,6 +2,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <opencv2/opencv.hpp>
+// #include <opencv2/highgui/highgui.hpp> // 该模块编译失败了，没法用imshow,waitKey。。。
 #include <iostream>
 using namespace std;
 using namespace cv;
@@ -111,8 +112,10 @@ int main(){
     //销毁handle
     cudnnDestroy(handle);
     //显示结果
-    imshow("cudnn_sample",dst_gpu);
-    // cv2 waitKey(delay),用于指定图像显示的延迟
+    // imshow("cudnn_sample",dst_gpu);
+    // waitKey(1);
+    printf("done!!!!!!!!!!!\n");
+    // cv2 waitKey(delay),用于指定图像显示的延迟, #include "opencv2\highgui\highgui.hpp"，但该模块编译失败只能在cmake-gui里勾选掉
     // 这个函数是HighGUI窗口中唯一的获取和处理事件的方法，因此它必须存在。
     return 0;
 

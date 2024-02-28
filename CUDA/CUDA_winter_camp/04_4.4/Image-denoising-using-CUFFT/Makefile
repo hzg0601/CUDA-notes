@@ -1,6 +1,6 @@
 IDIR = /usr/local/cuda/samples/common/inc/
 CC=nvcc
-CFLAGS+=-I$(IDIR) `pkg-config opencv4 --cflags --libs`
+CFLAGS+=-I$(IDIR) `pkg-config opencv --cflags --libs`
 LDFLAGS+= -lcufft -lopencv_imgproc -lopencv_core -lopencv_highgui
 
 ODIR=obj

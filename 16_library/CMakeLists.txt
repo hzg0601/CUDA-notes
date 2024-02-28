@@ -1,6 +1,6 @@
 
 # cmake needs this line
-cmake_minimum_required(VERSION 2.3)
+cmake_minimum_required(VERSION 3.13.2)
  
 # Define project name
 project(cudnn_sample LANGUAGES CXX CUDA)
@@ -17,6 +17,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED on)
 find_package(OpenCV REQUIRED)
 # # 将指定目录添加到编译器的头文件搜索路径之下，指定的目录被解释成当前源码路径的相对路径。
 include_directories(/usr/local/include/opencv4/)
+include_directories(/usr/local/cuda-12.1/targets/x86_64-linux/include/)
 if (OpenCV_FOUND)
     # If the package has been found, several variables will
     # be set, you can find the full list with descriptions
@@ -41,7 +42,7 @@ if(CUDA_FOUND)
 else()
     message(FATAL_ERROR "Can't found CUDA")
 endif()       
- 
+
 # Declare the executable target built from your sources
 add_executable(cudnn.out cudnn_sample.cu)
  
